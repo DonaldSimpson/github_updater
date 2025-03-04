@@ -2,9 +2,7 @@
 
 ## Purpose
 
-Some recruiters judge developers by their github commit/activity graph. Yes; that is clearly very dumb.
-
-I migrated from GitHub to my own personal self-hosted service when Microsoft bought GitHub, and only use GitHub rarely - or more commonly for work - these days. This got my pondering how I could automate a busy github commit graph, just for the heck of it, and ended up here.
+I heard recently that some people (recruiters, interviewers) judge developers by their github commit/activity graph. Yes; that is clearly very dumb. I migrated from GitHub to my own personal self-hosted git service when Microsoft bought GitHub (timing not a coincidence), and only use GitHub rarely - or more commonly for work - these days. But, this observation got me pondering how I could automate a busy github commit graph, just for the heck of it, and ended up here.
 
 The GitHub Updater project automates updating files in a repository, committing the changes, and pushing them to GitHub.
 
