@@ -13,7 +13,7 @@ def generate_random_text(length):
 
 def update_files():
     try:
-        files = glob.glob('file.*')
+        files = glob.glob('update_files/file.*')
         num_files_to_update = random.randint(1, len(files))
         files_to_update = random.sample(files, num_files_to_update)
         

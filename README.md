@@ -34,7 +34,7 @@ The GitHub Updater project is designed to automate the process of updating files
 
 ## Features
 
-### [commit_file.py](http://_vscodecontentref_/2)
+### `commit_file.py`
 
 - **Purpose**: This script updates a random number of files matching the pattern `file.*` by appending random text to them. It then commits and pushes these changes to the GitHub repository.
 - **Functions**:
@@ -44,14 +44,14 @@ The GitHub Updater project is designed to automate the process of updating files
   - `git_commit_and_push(file_paths, commit_message)`: Commits and pushes the changes to the GitHub repository.
 - **Logging**: Logs activities and errors to `output.log`.
 
-### [schedule_commit.py](http://_vscodecontentref_/4)
+### `schedule_commit.py`
 
 - **Purpose**: This script schedules the `commit_file.py` script to run a random number of times per day (between 1 and 5 times) at random intervals.
 - **Functions**:
   - `schedule_commit_script()`: Determines the number of times to run the script and schedules it using the `at` command.
 - **Logging**: Logs scheduling activities and errors to `output.log`.
 
-### [commit_messages.txt](http://_vscodecontentref_/6)
+### `commit_messages.txt`
 
 - **Purpose**: Contains a list of typical commit messages. The `commit_file.py` script randomly selects a commit message from this file for each commit.
 - **Content**: 20 example commit messages.
