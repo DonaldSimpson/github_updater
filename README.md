@@ -2,11 +2,15 @@
 
 ## Purpose
 
-The GitHub Updater project is designed to automate the process of updating files in a repository, committing the changes, and pushing them to GitHub.
+Some recruiters judge developers by their github commit/activity graph. Yes; that is clearly very dumb.
 
-The project includes scripts that will run a random number of times per day, making random updates to files and committing those changes with randomly selected commit messages.
+I migrated from GitHub to my own personal self-hosted service when Microsoft bought GitHub, and only use GitHub rarely - or more commonly for work - these days. This got my pondering how I could automate a busy github commit graph, just for the heck of it, and ended up here.
 
-The random jobs are created as `at` schedules, which are setup daily by a cronjob
+The GitHub Updater project automates updating files in a repository, committing the changes, and pushing them to GitHub.
+
+The project includes scripts that will run a random number of times per day, each time making random updates to files and committing those changes with randomly selected commit messages.
+
+This is done via cron job which runs the `schedule_commit.py` at midnight every day. This script creates a number of sceduled `at` tasks that runs the `commit_file.py` script which will make updates and commit them to github throughout the day.
 
 Updated files & file types are in update_files - to add a new type just create a file.<ext> in there whith whatever extension you want and it will be updated (randomly).
 
