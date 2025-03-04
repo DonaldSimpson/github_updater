@@ -21,8 +21,11 @@ def schedule_commit_script():
         # Schedule the script to run at the calculated times
         for run_time in intervals:
             run_time_str = run_time.strftime('%H:%M')
-            subprocess.run(['echo', f'/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py | at {run_time_str}'], shell=True, check=True)
+            command = f'echo "/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py" | at {run_time_str}'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
             logging.info(f'Scheduled commit_file.py to run at {run_time_str}')
+            logging.info(f'Command output: {result.stdout}')
+            logging.error(f'Command error: {result.stderr}')
     except Exception as e:
         logging.error(f'An error occurred: {e}')
 
