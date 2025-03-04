@@ -2,7 +2,13 @@
 
 ## Purpose
 
-The GitHub Updater project is designed to automate the process of updating files in a repository, committing the changes, and pushing them to GitHub. The project includes scripts that can run a random number of times per day, making random updates to files and committing those changes with randomly selected commit messages.
+The GitHub Updater project is designed to automate the process of updating files in a repository, committing the changes, and pushing them to GitHub.
+
+The project includes scripts that will run a random number of times per day, making random updates to files and committing those changes with randomly selected commit messages.
+
+The random jobs are created as `at` schedules, which are setup daily by a cronjob
+
+Updated files & file types are in update_files - to add a new type just create a file.<ext> in there whith whatever extension you want and it will be updated (randomly).
 
 ## Installation
 
@@ -31,6 +37,7 @@ The GitHub Updater project is designed to automate the process of updating files
     ```sh
     0 0 * * * /usr/bin/python3 /`<yourinstallpath>`/schedule_commit.py
     ```
+    Ensure you **update the path** to the files in the `schedule_commit.py` file too.
 
 ## Features
 
