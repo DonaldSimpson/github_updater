@@ -40,6 +40,14 @@ def get_random_commit_message():
         logging.error(f'An error occurred while getting commit message: {e}')
         raise
 
+def git_pull():
+    try:
+        subprocess.run(['git', 'pull'], check=True)
+        logging.info("Successfully pulled the latest changes.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f'An error occurred during git pull: {e}')
+        raise
+
 def git_commit_and_push(file_paths, commit_message):
     try:
         # Add the files to the staging area
@@ -57,6 +65,9 @@ def git_commit_and_push(file_paths, commit_message):
         raise
 
 try:
+    # Pull the latest changes to reduce the chance of conflicts
+    git_pull()
+
     # Update the files
     updated_files = update_files()
 
