@@ -45,7 +45,11 @@ def git_pull():
     try:
         # Run the git pull command
         result = subprocess.run(['git', 'pull'], check=True, capture_output=True, text=True)
-        logging.info(f"Successfully pulled the latest changes: {result.stdout}")
+        # Filter out the warning about /bin/sh
+        if "warning: commands will be executed using /bin/sh" in result.stderr:
+            logging.warning("Git warning: commands will be executed using /bin/sh")
+        else:
+            logging.info(f"Successfully pulled the latest changes: {result.stdout}")
     except subprocess.CalledProcessError as e:
         # Log the error but do not raise an exception
         logging.error(f"An error occurred during git pull: {e}")
