@@ -3,6 +3,7 @@ import glob
 import random
 import string
 import logging
+import time
 
 # Set up logging
 logging.basicConfig(filename='output.log', level=logging.INFO, 
@@ -42,11 +43,28 @@ def get_random_commit_message():
 
 def git_pull():
     try:
-        subprocess.run(['git', 'pull'], check=True)
-        logging.info("Successfully pulled the latest changes.")
+        # Run the git pull command
+        result = subprocess.run(['git', 'pull'], check=True, capture_output=True, text=True)
+        logging.info(f"Successfully pulled the latest changes: {result.stdout}")
     except subprocess.CalledProcessError as e:
-        logging.error(f'An error occurred during git pull: {e}')
-        raise
+        # Log the error but do not raise an exception
+        logging.error(f"An error occurred during git pull: {e}")
+        logging.error(f"Command output: {e.stdout}")
+        logging.error(f"Command error: {e.stderr}")
+        logging.warning("Continuing the process despite git pull failure.")
+
+def git_pull_with_retry(retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            git_pull()
+            return  # Exit the function if git_pull succeeds
+        except Exception as e:
+            logging.error(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < retries - 1:
+                logging.info(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+            else:
+                logging.warning("All retry attempts failed. Continuing the process.")
 
 def git_commit_and_push(file_paths, commit_message):
     try:
@@ -66,7 +84,7 @@ def git_commit_and_push(file_paths, commit_message):
 
 try:
     # Pull the latest changes to reduce the chance of conflicts
-    git_pull()
+    git_pull_with_retry()
 
     # Update the files
     updated_files = update_files()
@@ -77,4 +95,4 @@ try:
     # Commit and push the changes
     git_commit_and_push(updated_files, commit_message)
 except Exception as e:
-    logging.error(f'An error occurred in the main process: {e}')
+    logging.error(f"An error occurred in the main process: {e}")
