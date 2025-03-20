@@ -43,18 +43,18 @@ def get_random_commit_message():
 
 def git_pull():
     try:
-        # Run the git pull command
-        result = subprocess.run(['git', 'pull'], check=True, capture_output=True, text=True)
-        # Filter out the warning about /bin/sh
-        if "warning: commands will be executed using /bin/sh" in result.stderr:
-            logging.warning("Git warning: commands will be executed using /bin/sh")
-        else:
-            logging.info(f"Successfully pulled the latest changes: {result.stdout}")
+        # Run the git pull command with --rebase
+        result = subprocess.run(['git', 'pull', '--rebase'], check=True, capture_output=True, text=True)
+        logging.info(f"Successfully pulled the latest changes with rebase: {result.stdout}")
     except subprocess.CalledProcessError as e:
-        # Log the error but do not raise an exception
-        logging.error(f"An error occurred during git pull: {e}")
-        logging.error(f"Command output: {e.stdout}")
-        logging.error(f"Command error: {e.stderr}")
+        # Check if the error is due to a rebase conflict
+        if "CONFLICT" in (e.stderr or ""):
+            logging.error("Rebase conflict detected. Aborting rebase.")
+            subprocess.run(['git', 'rebase', '--abort'], check=False)
+        else:
+            logging.error(f"An error occurred during git pull --rebase: {e}")
+            logging.error(f"Command output: {e.stdout}")
+            logging.error(f"Command error: {e.stderr}")
         logging.warning("Continuing the process despite git pull failure.")
 
 def git_pull_with_retry(retries=3, delay=5):
@@ -86,7 +86,21 @@ def git_commit_and_push(file_paths, commit_message):
         logging.error(f'An error occurred during git operations: {e}')
         raise
 
+def ensure_clean_working_directory():
+    try:
+        result = subprocess.run(['git', 'status', '--porcelain'], check=True, capture_output=True, text=True)
+        if result.stdout.strip():
+            logging.error("Working directory is not clean. Please commit or stash changes before pulling.")
+            raise Exception("Working directory is not clean.")
+        logging.info("Working directory is clean.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"An error occurred while checking the working directory: {e}")
+        raise
+
 try:
+    # Ensure the working directory is clean
+    ensure_clean_working_directory()
+
     # Pull the latest changes to reduce the chance of conflicts
     git_pull_with_retry()
 
