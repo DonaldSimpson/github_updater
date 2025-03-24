@@ -43,17 +43,25 @@ def get_random_commit_message():
 
 def git_pull():
     try:
-        # Stash any uncommitted changes
-        stash_result = subprocess.run(['git', 'stash', 'push', '-m', 'Auto-stash before pull'], check=True, capture_output=True, text=True)
-        logging.info(f"Stashed changes: {stash_result.stdout.strip()}")
+        # Check if there are changes to stash
+        status_result = subprocess.run(['git', 'status', '--porcelain'], check=True, capture_output=True, text=True)
+        if status_result.stdout.strip():
+            # Stash any uncommitted changes
+            stash_result = subprocess.run(['git', 'stash', 'push', '-m', 'Auto-stash before pull'], check=True, capture_output=True, text=True)
+            logging.info(f"Stashed changes: {stash_result.stdout.strip()}")
+            stash_applied = True
+        else:
+            logging.info("No changes to stash.")
+            stash_applied = False
 
         # Run the git pull command with --rebase
         result = subprocess.run(['git', 'pull', '--rebase'], check=True, capture_output=True, text=True)
         logging.info(f"Successfully pulled the latest changes with rebase: {result.stdout.strip()}")
 
-        # Reapply the stashed changes
-        pop_result = subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True, text=True)
-        logging.info(f"Reapplied stashed changes: {pop_result.stdout.strip()}")
+        # Reapply the stashed changes if a stash was created
+        if stash_applied:
+            pop_result = subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True, text=True)
+            logging.info(f"Reapplied stashed changes: {pop_result.stdout.strip()}")
     except subprocess.CalledProcessError as e:
         logging.error(f"An error occurred during git pull or stash operations: {e}")
         logging.error(f"Command output: {e.stdout.strip()}")
