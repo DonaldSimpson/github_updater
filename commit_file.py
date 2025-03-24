@@ -43,19 +43,22 @@ def get_random_commit_message():
 
 def git_pull():
     try:
+        # Stash any uncommitted changes
+        stash_result = subprocess.run(['git', 'stash', 'push', '-m', 'Auto-stash before pull'], check=True, capture_output=True, text=True)
+        logging.info(f"Stashed changes: {stash_result.stdout.strip()}")
+
         # Run the git pull command with --rebase
         result = subprocess.run(['git', 'pull', '--rebase'], check=True, capture_output=True, text=True)
-        logging.info(f"Successfully pulled the latest changes with rebase: {result.stdout}")
+        logging.info(f"Successfully pulled the latest changes with rebase: {result.stdout.strip()}")
+
+        # Reapply the stashed changes
+        pop_result = subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True, text=True)
+        logging.info(f"Reapplied stashed changes: {pop_result.stdout.strip()}")
     except subprocess.CalledProcessError as e:
-        # Check if the error is due to a rebase conflict
-        if "CONFLICT" in (e.stderr or ""):
-            logging.error("Rebase conflict detected. Aborting rebase.")
-            subprocess.run(['git', 'rebase', '--abort'], check=False)
-        else:
-            logging.error(f"An error occurred during git pull --rebase: {e}")
-            logging.error(f"Command output: {e.stdout}")
-            logging.error(f"Command error: {e.stderr}")
-        logging.warning("Continuing the process despite git pull failure.")
+        logging.error(f"An error occurred during git pull or stash operations: {e}")
+        logging.error(f"Command output: {e.stdout.strip()}")
+        logging.error(f"Command error: {e.stderr.strip()}")
+        raise
 
 def git_pull_with_retry(retries=3, delay=5):
     for attempt in range(retries):
@@ -97,11 +100,35 @@ def ensure_clean_working_directory():
         logging.error(f"An error occurred while checking the working directory: {e}")
         raise
 
-try:
-    # Ensure the working directory is clean
-    ensure_clean_working_directory()
+def auto_commit_changes():
+    try:
+        # Check for uncommitted changes
+        result = subprocess.run(['git', 'status', '--porcelain'], check=True, capture_output=True, text=True)
+        if result.stdout.strip():
+            # Stage all changes
+            subprocess.run(['git', 'add', '.'], check=True)
+            # Commit the changes
+            subprocess.run(['git', 'commit', '-m', 'Auto-commit before pull'], check=True)
+            logging.info("Automatically committed uncommitted changes.")
+        else:
+            logging.info("No uncommitted changes to commit.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"An error occurred during auto-commit: {e}")
+        raise
 
-    # Pull the latest changes to reduce the chance of conflicts
+def clean_untracked_files():
+    try:
+        subprocess.run(['git', 'clean', '-fd'], check=True)
+        logging.info("Removed untracked files.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"An error occurred while cleaning untracked files: {e}")
+        raise
+
+try:
+    # Ensure the working directory is clean or auto-commit changes
+    auto_commit_changes()
+
+    # Pull the latest changes
     git_pull_with_retry()
 
     # Update the files
