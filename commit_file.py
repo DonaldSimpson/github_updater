@@ -4,10 +4,16 @@ import random
 import string
 import logging
 import time
+import os
 
 # Set up logging
 logging.basicConfig(filename='output.log', level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Constants
+GIT_TIMEOUT = 30  # seconds
+MAX_RETRIES = 3
+RETRY_DELAY = 5
 
 def generate_random_text(length):
     return ''.join(random.choices(string.ascii_letters + string.digits + string.punctuation + ' ', k=length))
@@ -41,45 +47,123 @@ def get_random_commit_message():
         logging.error(f'An error occurred while getting commit message: {e}')
         raise
 
+def is_git_repository():
+    try:
+        subprocess.run(['git', 'rev-parse', '--is-inside-work-tree'], 
+                      check=True, capture_output=True, timeout=GIT_TIMEOUT)
+        return True
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return False
+
+def verify_git_config():
+    try:
+        # Check if user.name and user.email are configured
+        subprocess.run(['git', 'config', 'user.name'], check=True, capture_output=True, timeout=GIT_TIMEOUT)
+        subprocess.run(['git', 'config', 'user.email'], check=True, capture_output=True, timeout=GIT_TIMEOUT)
+        return True
+    except subprocess.CalledProcessError:
+        logging.error("Git user.name or user.email is not configured")
+        return False
+
+def verify_remote_access():
+    try:
+        subprocess.run(['git', 'ls-remote', '--quiet'], check=True, capture_output=True, timeout=GIT_TIMEOUT)
+        return True
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Failed to access remote repository: {e}")
+        return False
+
+def handle_merge_conflicts():
+    try:
+        # Check if there are merge conflicts
+        status = subprocess.run(['git', 'status', '--porcelain'], 
+                              check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT)
+        if 'UU' in status.stdout:  # UU indicates unmerged files
+            logging.warning("Merge conflicts detected. Aborting rebase.")
+            subprocess.run(['git', 'rebase', '--abort'], check=True, timeout=GIT_TIMEOUT)
+            return False
+        return True
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error handling merge conflicts: {e}")
+        return False
+
 def git_pull():
     try:
+        if not is_git_repository():
+            raise Exception("Not a git repository")
+        
+        if not verify_git_config():
+            raise Exception("Git configuration is incomplete")
+            
+        if not verify_remote_access():
+            raise Exception("Cannot access remote repository")
+
+        # Get the current branch name
+        branch_result = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], 
+                                    check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT)
+        current_branch = branch_result.stdout.strip()
+        
         # Check if there are changes to stash
-        status_result = subprocess.run(['git', 'status', '--porcelain'], check=True, capture_output=True, text=True)
+        status_result = subprocess.run(['git', 'status', '--porcelain'], 
+                                    check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT)
         if status_result.stdout.strip():
             # Stash any uncommitted changes
-            stash_result = subprocess.run(['git', 'stash', 'push', '-m', 'Auto-stash before pull'], check=True, capture_output=True, text=True)
+            stash_result = subprocess.run(['git', 'stash', 'push', '-m', 'Auto-stash before pull'], 
+                                       check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT)
             logging.info(f"Stashed changes: {stash_result.stdout.strip()}")
             stash_applied = True
         else:
             logging.info("No changes to stash.")
             stash_applied = False
 
-        # Run the git pull command with --rebase
-        result = subprocess.run(['git', 'pull', '--rebase'], check=True, capture_output=True, text=True)
+        # Run the git pull command with --rebase and specify the current branch
+        result = subprocess.run(['git', 'pull', '--rebase', 'origin', current_branch], 
+                              check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT)
         logging.info(f"Successfully pulled the latest changes with rebase: {result.stdout.strip()}")
+
+        # Check for merge conflicts after pull
+        if not handle_merge_conflicts():
+            raise Exception("Merge conflicts detected during pull")
 
         # Reapply the stashed changes if a stash was created
         if stash_applied:
-            pop_result = subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True, text=True)
-            logging.info(f"Reapplied stashed changes: {pop_result.stdout.strip()}")
+            try:
+                pop_result = subprocess.run(['git', 'stash', 'pop'], 
+                                         check=True, capture_output=True, text=True, timeout=GIT_TIMEOUT)
+                logging.info(f"Reapplied stashed changes: {pop_result.stdout.strip()}")
+            except subprocess.CalledProcessError as e:
+                logging.error(f"Failed to apply stashed changes: {e}")
+                # Try to recover the stash
+                subprocess.run(['git', 'stash', 'apply'], check=True, timeout=GIT_TIMEOUT)
+                raise
+    except subprocess.TimeoutExpired:
+        logging.error("Git operation timed out")
+        raise
     except subprocess.CalledProcessError as e:
         logging.error(f"An error occurred during git pull or stash operations: {e}")
         logging.error(f"Command output: {e.stdout.strip()}")
         logging.error(f"Command error: {e.stderr.strip()}")
         raise
+    except Exception as e:
+        logging.error(f"Unexpected error during git pull: {e}")
+        raise
 
-def git_pull_with_retry(retries=3, delay=5):
+def git_pull_with_retry(retries=MAX_RETRIES, delay=RETRY_DELAY):
+    last_error = None
     for attempt in range(retries):
         try:
             git_pull()
             return  # Exit the function if git_pull succeeds
         except Exception as e:
+            last_error = e
             logging.error(f"Attempt {attempt + 1} failed: {e}")
             if attempt < retries - 1:
                 logging.info(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
                 logging.warning("All retry attempts failed. Continuing the process.")
+    if last_error:
+        raise last_error
 
 def git_commit_and_push(file_paths, commit_message):
     try:
