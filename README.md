@@ -2,13 +2,11 @@
 
 ## Purpose
 
-I heard recently that some people (recruiters, interviewers) judge developers by their github commit/activity graph. Yes; that is clearly very dumb. I migrated from GitHub to my own personal self-hosted git service when Microsoft bought GitHub (timing not a coincidence), and only use GitHub rarely - or more commonly for work - these days. But, this observation got me pondering how I could automate a busy github commit graph, just for the heck of it, and ended up here.
+The GitHub Updater Project automates updating files in a git repository, committing the changes, and pushing them to GitHub.
 
-The GitHub Updater project automates updating files in a repository, committing the changes, and pushing them to GitHub.
+The project includes scripts that will run a random number of times per day, each time making random updates to a random selection of files, and committing those changes with randomly selected (and supposedly 'funny') commit messages.
 
-The project includes scripts that will run a random number of times per day, each time making random updates to files and committing those changes with randomly selected commit messages.
-
-This is done via cron job which runs the `schedule_commit.py` at midnight every day. This script creates a number of sceduled `at` tasks that runs the `commit_file.py` script which will make updates and commit them to github throughout the day.
+This is done via cron job which runs the `schedule_commit.py` at midnight every day. This script creates a number of sceduled `at` tasks that then run the `commit_file.py` script which will make the updates and commit them to github throughout the day.
 
 Updated files & file types are in update_files - to add a new type just create a file.<ext> in there whith whatever extension you want and it will be updated (randomly).
 

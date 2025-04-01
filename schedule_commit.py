@@ -2,6 +2,7 @@ import random
 import subprocess
 from datetime import datetime, timedelta
 import logging
+import os
 
 # Set up logging
 logging.basicConfig(filename='output.log', level=logging.DEBUG, 
@@ -9,6 +10,11 @@ logging.basicConfig(filename='output.log', level=logging.DEBUG,
 
 def schedule_commit_script():
     try:
+        logging.info("schedule_commit.py script started.")
+
+        # Log the current environment variables
+        logging.debug(f"Environment variables: {os.environ}")
+
         # Determine the number of times to run the script today (between 1 and 5)
         num_runs = random.randint(1, 5)
         logging.debug(f'Number of runs scheduled for today: {num_runs}')
