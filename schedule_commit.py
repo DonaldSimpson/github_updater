@@ -1,5 +1,4 @@
 import random
-import subprocess
 from datetime import datetime, timedelta
 import logging
 import os
@@ -27,17 +26,9 @@ def schedule_commit_script():
         intervals = sorted([now + timedelta(seconds=random.randint(0, 86400)) for _ in range(num_runs)])
         logging.debug(f'Scheduled intervals: {intervals}')
         
-        # Schedule the script to run at the calculated times
+        # Log the intended schedule
         for run_time in intervals:
-            run_time_str = run_time.strftime('%H:%M')
-            command = f'echo "/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py" | at {run_time_str}'
-            logging.debug(f'Executing command: {command}')
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            logging.info(f'Scheduled commit_file.py to run at {run_time_str}')
-            logging.debug(f'Command output: {result.stdout}')
-            logging.error(f'Command error: {result.stderr}')
-            if result.returncode != 0:
-                logging.error(f'Command failed with return code: {result.returncode}')
+            logging.info(f"Intended schedule: commit_file.py to run at {run_time.strftime('%H:%M:%S')}")
     except Exception as e:
         logging.error(f'An error occurred: {e}')
 
