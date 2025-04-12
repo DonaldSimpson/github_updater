@@ -1,4 +1,5 @@
 import random
+import subprocess
 from datetime import datetime, timedelta
 import logging
 import os
@@ -14,6 +15,9 @@ def schedule_commit_script():
         # Log the current environment variables
         logging.debug(f"Environment variables: {os.environ}")
 
+        # Log the PATH variable
+        logging.debug(f"PATH: {os.environ.get('PATH')}")
+
         # Determine the number of times to run the script today (between 1 and 5)
         num_runs = random.randint(1, 5)
         logging.debug(f'Number of runs scheduled for today: {num_runs}')
@@ -26,9 +30,17 @@ def schedule_commit_script():
         intervals = sorted([now + timedelta(seconds=random.randint(0, 86400)) for _ in range(num_runs)])
         logging.debug(f'Scheduled intervals: {intervals}')
         
-        # Log the intended schedule
+        # Schedule the script to run at the calculated times
         for run_time in intervals:
-            logging.info(f"Intended schedule: commit_file.py to run at {run_time.strftime('%H:%M:%S')}")
+            run_time_str = run_time.strftime('%H:%M')
+            command = f'echo "/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py" | at {run_time_str}'
+            logging.debug(f'Executing command: {command}')
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            logging.info(f'Scheduled commit_file.py to run at {run_time_str}')
+            logging.debug(f'Command output: {result.stdout}')
+            logging.error(f'Command error: {result.stderr}')
+            if result.returncode != 0:
+                logging.error(f'Command failed with return code: {result.returncode}')
     except Exception as e:
         logging.error(f'An error occurred: {e}')
 
