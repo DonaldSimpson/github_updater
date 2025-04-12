@@ -12,11 +12,12 @@ def schedule_commit_script():
     try:
         logging.info("schedule_commit.py script started.")
 
+        # Set the PATH explicitly
+        os.environ["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+        logging.debug(f"Updated PATH: {os.environ.get('PATH')}")
+
         # Log the current environment variables
         logging.debug(f"Environment variables: {os.environ}")
-
-        # Log the PATH variable
-        logging.debug(f"PATH: {os.environ.get('PATH')}")
 
         # Determine the number of times to run the script today (between 1 and 5)
         num_runs = random.randint(1, 5)

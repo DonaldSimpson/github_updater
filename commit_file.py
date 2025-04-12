@@ -7,8 +7,11 @@ import time
 import os
 
 # Set up logging
-logging.basicConfig(filename='output.log', level=logging.INFO, 
+logging.basicConfig(filename='commit_output.log', level=logging.DEBUG, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Log the environment variables
+logging.debug(f"Environment variables: {os.environ}")
 
 # Constants
 GIT_TIMEOUT = 30  # seconds
