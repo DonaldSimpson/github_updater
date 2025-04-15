@@ -46,7 +46,7 @@ def schedule_commit_script():
         for run_time in intervals:
             run_time_str = run_time.strftime('%H:%M')
             # Add debugging to log the exact command being scheduled
-            command = f'echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; /usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py >> /home/don/workspaces/github_updater/commit_output.log 2>&1" | at {run_time_str}'
+            command = f'echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; /bin/bash -c \'/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py >> /home/don/workspaces/github_updater/commit_output.log 2>&1\'" | at {run_time_str}'
             logging.debug(f'Executing command: {command}')
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             logging.info(f'Scheduled commit_file.py to run at {run_time_str}')
