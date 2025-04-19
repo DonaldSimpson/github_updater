@@ -13,6 +13,22 @@ logging.basicConfig(filename='commit_output.log', level=logging.DEBUG,
 # Log the environment variables
 logging.debug(f"Environment variables: {os.environ}")
 
+# Log the current working directory
+logging.debug(f"Current working directory: {os.getcwd()}")
+
+# Verify the current working directory
+expected_cwd = "/home/don/workspaces/github_updater"
+if os.getcwd() != expected_cwd:
+    logging.error(f"Unexpected working directory: {os.getcwd()}. Expected: {expected_cwd}")
+    os.chdir(expected_cwd)
+    logging.info(f"Changed working directory to: {expected_cwd}")
+
+# Verify required files
+required_files = ['commit_messages.txt']
+for file in required_files:
+    if not os.path.exists(file):
+        logging.error(f"Required file not found: {file}")
+
 # Constants
 GIT_TIMEOUT = 30  # seconds
 MAX_RETRIES = 3
@@ -23,6 +39,7 @@ def generate_random_text(length):
 
 def update_files():
     try:
+        logging.debug("Starting file update operation...")
         files = glob.glob('update_files/file.*')
         num_files_to_update = random.randint(1, len(files))
         files_to_update = random.sample(files, num_files_to_update)
@@ -34,6 +51,7 @@ def update_files():
                 f.write(f'\n# {random_text}\n')
         
         logging.info(f'Updated files: {files_to_update}')
+        logging.debug("File update operation completed.")
         return files_to_update
     except Exception as e:
         logging.error(f'An error occurred while updating files: {e}')
@@ -170,6 +188,7 @@ def git_pull_with_retry(retries=MAX_RETRIES, delay=RETRY_DELAY):
 
 def git_commit_and_push(file_paths, commit_message):
     try:
+        logging.debug("Starting git commit operation...")
         # Add the files to the staging area
         subprocess.run(['git', 'add'] + file_paths, check=True)
         
@@ -180,6 +199,7 @@ def git_commit_and_push(file_paths, commit_message):
         subprocess.run(['git', 'push'], check=True)
         
         logging.info("Files committed and pushed successfully.")
+        logging.debug("Git commit operation completed.")
     except subprocess.CalledProcessError as e:
         logging.error(f'An error occurred during git operations: {e}')
         raise
@@ -220,19 +240,28 @@ def clean_untracked_files():
         raise
 
 try:
+    logging.info("Starting main process in commit_file.py")
+
     # Ensure the working directory is clean or auto-commit changes
+    logging.info("Ensuring clean working directory or auto-committing changes...")
     auto_commit_changes()
 
     # Pull the latest changes
+    logging.info("Pulling the latest changes...")
     git_pull_with_retry()
 
     # Update the files
+    logging.info("Updating files...")
     updated_files = update_files()
 
     # Get a random commit message
+    logging.info("Getting a random commit message...")
     commit_message = get_random_commit_message()
 
     # Commit and push the changes
+    logging.info("Committing and pushing changes...")
     git_commit_and_push(updated_files, commit_message)
+
+    logging.info("Main process in commit_file.py completed successfully.")
 except Exception as e:
-    logging.error(f"An error occurred in the main process: {e}")
+    logging.error(f"An error occurred in the main process: {e}", exc_info=True)

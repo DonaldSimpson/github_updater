@@ -45,15 +45,25 @@ def schedule_commit_script():
         # Schedule the script to run at the calculated times
         for run_time in intervals:
             run_time_str = run_time.strftime('%H:%M')
-            # Add debugging to log the exact command being scheduled
-            command = f'echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; /bin/bash -c \'/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py >> /home/don/workspaces/github_updater/commit_output.log 2>&1\'" | at {run_time_str}'
-            logging.debug(f'Executing command: {command}')
+            # Construct the command to schedule with `at`
+            command = (
+                f'echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; '
+                f'/usr/bin/python3 /home/don/workspaces/github_updater/commit_file.py '
+                f'>> /home/don/workspaces/github_updater/commit_output.log 2>&1" | at {run_time_str}'
+            )
+            logging.debug(f'Scheduling command: {command}')
+            
+            # Execute the command
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            logging.info(f'Scheduled commit_file.py to run at {run_time_str}')
-            logging.debug(f'Command output: {result.stdout}')
-            logging.error(f'Command error: {result.stderr}')
-            if result.returncode != 0:
-                logging.error(f'Command failed with return code: {result.returncode}')
+            
+            # Log the result
+            if result.returncode == 0:
+                logging.info(f'Successfully scheduled commit_file.py to run at {run_time_str}')
+                logging.debug(f'Command output: {result.stdout.strip()}')
+            else:
+                logging.error(f'Failed to schedule commit_file.py at {run_time_str}')
+                logging.error(f'Command output: {result.stdout.strip()}')
+                logging.error(f'Command error: {result.stderr.strip()}')
     except Exception as e:
         logging.error(f'An error occurred: {e}', exc_info=True)
 
