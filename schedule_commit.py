@@ -31,7 +31,7 @@ def schedule_commit_script():
         logging.debug(f"Environment variables: {os.environ}")
 
         # Determine the number of times to run the script today
-        num_runs = random.randint(1, 25)
+        num_runs = random.randint(0, 35)
         logging.debug(f'Number of runs scheduled for today: {num_runs}')
         
         # Get the current time
