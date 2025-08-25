@@ -4736,3 +4736,7 @@ remove the file manually to continue.
  1 file changed, 2 insertions(+)
 [main 0e999f0d] Auto-commit before pull
  1 file changed, 2 insertions(+)
+Auto packing the repository in background for optimum performance.
+See "git help gc" for manual housekeeping.
+[main 9b98e44c] Auto-commit before pull
+ 1 file changed, 4 insertions(+)
