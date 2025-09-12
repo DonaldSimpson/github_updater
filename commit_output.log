@@ -5432,3 +5432,12 @@ remove the file manually to continue.
  1 file changed, 2 insertions(+)
 [main 25d49ddf] Auto-commit before pull
  1 file changed, 2 insertions(+)
+fatal: Unable to create '/home/don/workspaces/github_updater/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+[main d880bb9f] Auto-commit before pull
+ 1 file changed, 2 insertions(+)
